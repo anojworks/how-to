@@ -1,0 +1,64 @@
+# USMT User Data Migration Guide
+
+This guide outlines how to use the User State Migration Tool (USMT) to back up and restore user data (e.g., documents, desktop, browser history) while excluding system and application data, minimizing the migration store size. This was developed to address issues with large USMT.MIG files (e.g., 61GB) and ensure efficient migration during a device reset.
+
+## Prerequisites
+- **Windows ADK**: Install same version of Windows Assessment and Deployment Kit (ADK) with USMT component from [Microsoft](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install) on both source and target machines
+- **System**: 64-bit Windows workstation (use `amd64` USMT tools).
+- **Permissions**: Run commands as Administrator.
+- **Storage**: External drive or network location for the migration store (`C:\USMTBackup`).
+
+## Step-by-Step Instructions
+
+### 1. Prepare USMT
+- Locate USMT tools in:   C:\Program Files (x86)\Windows Kits<version>\Assessment and Deployment Kit\User State Migration Tool\amd64
+
+Replace `<version>` with your ADK version (e.g., 10 or 11).
+- Ensure `migapp.xml`, `migdocs.xml`, and `scanstate.exe`/`loadstate.exe` are present.
+
+### 2. Create Custom XML for User Data
+To exclude system/app data and reduce the migration store size, create a custom XML file (`customuser.xml`) in the `amd64` folder:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<migration urlid="http://www.microsoft.com/migration/1.0/migxmlext/usermigration">
+  <component type="Documents" context="User">
+      <displayName>User Files</displayName>
+      <role role="Data">
+          <rules>
+              <include>
+                  <objectSet>
+                      <pattern type="File">%CSIDL_PERSONAL%\* [*]</pattern> <!-- My Documents -->
+                      <pattern type="File">%CSIDL_DESKTOP%\* [*]</pattern> <!-- Desktop -->
+                      <pattern type="File">%CSIDL_FAVORITES%\* [*]</pattern> <!-- Favorites -->
+                      <pattern type="File">%CSIDL_LOCAL_APPDATA%\Microsoft\Edge\User Data\Default\* [*]</pattern> <!-- Edge browser data -->
+                      <pattern type="File">%CSIDL_LOCAL_APPDATA%\Google\Chrome\User Data\Default\* [*]</pattern> <!-- Chrome browser data -->
+                  </objectSet>
+              </include>
+              <exclude>
+                  <objectSet>
+                      <pattern type="File">%CSIDL_LOCAL_APPDATA%\Temp\* [*]</pattern> <!-- Exclude temp files -->
+                  </objectSet>
+              </exclude>
+          </rules>
+      </role>
+  </component>
+</migration>
+
+###3. Back Up User Data (ScanState)Open PowerShell as Administrator.
+Navigate to the USMT amd64 folder: cd "C:\Program Files (x86)\Windows Kits\<version>\Assessment and Deployment Kit\User State Migration Tool\amd64"
+This creates a USMT.MIG file in C:\USMTBackup
+
+
+###4. Copy Migration StoreTransfer the C:\USMTBackup folder to an external drive or network location.
+
+###5. Restore User Data (LoadState)Copy the C:\USMTBackup folder back to the reset device.
+Navigate to the USMT amd64 folder in PowerShell (as Administrator).
+Run LoadState to restore data: .\loadstate.exe C:\USMTBackup /i:customuser.xml /v:13 /l:load.log /c /lac /lae
+
+Expected Time
+Small Profile (~5-10 GB): ~10-30 minutes (backup + restore).
+Large Profile (~50 GB): ~35-120 minutes (backup + restore).
+Device Reset: ~30-60 minutes additional.
+Factors: SSD vs. HDD, file count, storage speed.
+
+
