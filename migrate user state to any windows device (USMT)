@@ -11,14 +11,14 @@ This guide outlines how to use the User State Migration Tool (USMT) to back up a
 ## Step-by-Step Instructions
 
 ### 1. Prepare USMT
-- Locate USMT tools in:   C:\Program Files (x86)\Windows Kits<version>\Assessment and Deployment Kit\User State Migration Tool\amd64
+- Locate USMT tools in:   C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\amd64
 
 Replace `<version>` with your ADK version (e.g., 10 or 11).
 - Ensure `migapp.xml`, `migdocs.xml`, and `scanstate.exe`/`loadstate.exe` are present.
 
 ### 2. Create Custom XML for User Data
-To exclude system/app data and reduce the migration store size, create a custom XML file (`customuser.xml`) in the `amd64` folder:
-```xml
+To exclude system/app data and reduce the migration store size (ideal for managed workstations), create a custom XML file (`customuser.xml`) in the `amd64` folder (Copy below and save as XML):
+
 <?xml version="1.0" encoding="UTF-8"?>
 <migration urlid="http://www.microsoft.com/migration/1.0/migxmlext/usermigration">
   <component type="Documents" context="User">
@@ -44,7 +44,7 @@ To exclude system/app data and reduce the migration store size, create a custom 
   </component>
 </migration>
 
-###3. Back Up User Data (ScanState)Open PowerShell as Administrator.
+###3. Back Up User Data (ScanState)Open PowerShell as Administrator > cd 'C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\amd64'
 Navigate to the USMT amd64 folder: cd "C:\Program Files (x86)\Windows Kits\<version>\Assessment and Deployment Kit\User State Migration Tool\amd64"
 This creates a USMT.MIG file in C:\USMTBackup
 
@@ -52,7 +52,7 @@ This creates a USMT.MIG file in C:\USMTBackup
 ###4. Copy Migration StoreTransfer the C:\USMTBackup folder to an external drive or network location.
 
 ###5. Restore User Data (LoadState)Copy the C:\USMTBackup folder back to the reset device.
-Navigate to the USMT amd64 folder in PowerShell (as Administrator).
+Navigate to the USMT amd64 folder in PowerShell (as Administrator), (eg, C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\amd64)
 Run LoadState to restore data: .\loadstate.exe C:\USMTBackup /i:customuser.xml /v:13 /l:load.log /c /lac /lae
 
 Expected Time
